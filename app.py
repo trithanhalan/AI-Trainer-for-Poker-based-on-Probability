@@ -204,6 +204,15 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Initialize session state FIRST (before any widgets access it)
+if "hole_cards" not in st.session_state:
+    deck = create_deck()
+    random.shuffle(deck)
+    st.session_state.hole_cards = [deck[0], deck[1]]
+    st.session_state.flop = [deck[2], deck[3], deck[4]]
+    st.session_state.turn = deck[5]
+    st.session_state.river = deck[6]
+
 # Sidebar
 with st.sidebar:
     st.header("🎮 Game Setup")
@@ -227,15 +236,6 @@ with st.sidebar:
     st.divider()
     st.header("⚙️ Settings")
     num_sims = st.slider("Monte Carlo Simulations", 100, 5000, 1000, step=100)
-
-# Initialize session state
-if "hole_cards" not in st.session_state:
-    deck = create_deck()
-    random.shuffle(deck)
-    st.session_state.hole_cards = [deck[0], deck[1]]
-    st.session_state.flop = [deck[2], deck[3], deck[4]]
-    st.session_state.turn = deck[5]
-    st.session_state.river = deck[6]
 
 hole_cards = st.session_state.hole_cards
 flop = st.session_state.flop
