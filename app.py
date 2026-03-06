@@ -7,6 +7,7 @@ and expected value analysis. Built with Streamlit.
 
 import streamlit as st
 import random
+from utils.ui import inject_css, render_header, render_metric_card
 from itertools import combinations
 from collections import Counter
 
@@ -156,53 +157,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    .stApp { font-family: 'Inter', sans-serif; }
-    
-    .poker-header {
-        text-align: center;
-        padding: 2rem 0;
-        background: linear-gradient(135deg, #1a5c2e 0%, #0d3b1e 100%);
-        border-radius: 16px;
-        color: white;
-        margin-bottom: 2rem;
-    }
-    
-    .poker-header h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .poker-header p { font-size: 1.1rem; opacity: 0.9; }
-    
-    .card-display {
-        display: inline-block;
-        padding: 8px 12px;
-        margin: 4px;
-        border-radius: 8px;
-        font-size: 1.3rem;
-        font-weight: 700;
-        background: white;
-        border: 2px solid #333;
-        min-width: 50px;
-        text-align: center;
-    }
-    
-    .card-red { color: #e74c3c; }
-    .card-black { color: #2c3e50; }
-    
-    .decision-call { background: #d4edda; border-radius: 8px; padding: 1rem; border-left: 4px solid #28a745; }
-    .decision-fold { background: #f8d7da; border-radius: 8px; padding: 1rem; border-left: 4px solid #dc3545; }
-    .decision-raise { background: #cce5ff; border-radius: 8px; padding: 1rem; border-left: 4px solid #007bff; }
-</style>
-""", unsafe_allow_html=True)
+# Apply SaaS UI Design System
+inject_css()
 
 # Header
-st.markdown("""
-<div class="poker-header">
-    <h1>🃏 PokerMind</h1>
-    <p>AI Poker Trainer — Learn Texas Hold'em strategy through probability</p>
-</div>
-""", unsafe_allow_html=True)
+render_header(
+    title="🃏 PokerMind",
+    description="AI Poker Trainer — Learn Texas Hold'em strategy through probability"
+)
 
 # Initialize session state FIRST (before any widgets access it)
 if "hole_cards" not in st.session_state:
@@ -278,14 +240,14 @@ with col1:
     all_cards = hole_cards + community_cards
     hand_rank, hand_name = best_hand(all_cards)
     
-    st.metric("Current Hand", hand_name)
-    st.metric("Hand Rank", f"{hand_rank}/9")
+    render_metric_card("Current Hand", hand_name)
+    render_metric_card("Hand Rank", f"{hand_rank}/9")
     
     # Win rate
     with st.spinner("Calculating win rate..."):
         win_rate = monte_carlo_win_rate(hole_cards, community_cards, num_sims)
     
-    st.metric("Estimated Win Rate", f"{win_rate:.1f}%")
+    render_metric_card("Estimated Win Rate", f"{win_rate:.1f}%")
     
     if win_rate >= 70:
         st.progress(win_rate / 100, text="Strong hand")
@@ -301,13 +263,13 @@ with col2:
     
     pot_odds = calculate_pot_odds(pot_size, bet_to_call)
     
-    st.metric("Pot Odds", f"{pot_odds:.1f}%")
-    st.metric("Pot Size", f"${pot_size}")
-    st.metric("Bet to Call", f"${bet_to_call}")
+    render_metric_card("Pot Odds", f"{pot_odds:.1f}%")
+    render_metric_card("Pot Size", f"${pot_size}")
+    render_metric_card("Bet to Call", f"${bet_to_call}")
     
     # Decision engine
     ev = (win_rate / 100 * pot_size) - ((1 - win_rate / 100) * bet_to_call)
-    st.metric("Expected Value", f"${ev:+.2f}")
+    render_metric_card("Expected Value", f"${ev:+.2f}")
     
     if ev > 0 and win_rate > 60:
         st.markdown('<div class="decision-raise">🚀 <strong>RAISE</strong> — Strong expected value and high win probability</div>', unsafe_allow_html=True)
@@ -329,12 +291,12 @@ if street in ["Flop", "Turn"] and len(community_cards) >= 3:
     
     col_a, col_b, col_c = st.columns(3)
     with col_a:
-        st.metric("Number of Outs", len(outs))
+        render_metric_card("Number of Outs", len(outs))
     with col_b:
-        st.metric("Probability (Next Card)", f"{outs_pct:.1f}%")
+        render_metric_card("Probability (Next Card)", f"{outs_pct:.1f}%")
     with col_c:
         rule_of = len(outs) * (4 if street == "Flop" else 2)
-        st.metric(f"Rule of {'4' if street == 'Flop' else '2'} Estimate", f"~{rule_of}%")
+        render_metric_card(f"Rule of {'4' if street == 'Flop' else '2'} Estimate", f"~{rule_of}%")
     
     if outs:
         display_cards(outs[:10], "Top Outs:")
@@ -361,9 +323,12 @@ with st.expander("📖 Hand Rankings Reference"):
 # Footer
 st.markdown("---")
 st.markdown(
-    "<p style='text-align: center; color: #6c757d;'>"
-    "Built by <a href='https://github.com/trithanhalan'>Alan</a> | "
-    "PokerMind — Learn poker through probability, not luck"
-    "</p>",
-    unsafe_allow_html=True
+    """<div style="text-align:center; padding:1.5rem 0;">
+    <p style="color:#A1A1AA !important; font-size:0.85rem; margin:0;">
+        <strong style="color:#00FFAA !important;">PokerMind v1.0</strong>
+    </p>
+    <p style="color:#A1A1AA !important; font-size:0.8rem; margin:4px 0 0 0;">
+        Built by Alan | Learn poker through probability, not luck
+    </p>
+</div>""", unsafe_allow_html=True
 )
